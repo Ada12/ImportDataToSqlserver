@@ -22,7 +22,7 @@ import org.supercsv.prefs.CsvPreference;
 public class ReadLocalData {
 
     // get csv content via super-csv
-    public static Map<String, Object> readCsvData(JSONObject setting) throws IOException, JSONException {
+    public static Map<String, Object> readCsvData(JSONObject setting) throws IOException, JSONException, ParseException {
         String path = setting.getString("FILEPATH");
         JSONArray fields = setting.getJSONArray("FIELDS");
         List<String> typeArray = new ArrayList<String>();
@@ -41,43 +41,97 @@ public class ReadLocalData {
         for (int j = 0; j < everySize.length; j ++) {
             everySize[j] = 0;
         }
+        int idIndex = isId(nameArray);
+        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String beginTimeStr = "2050-1-1 0:0:0"; // begin time, use a later time to initialize
+        String endTimeStr = "1900-1-1 0:0:0"; // end time, use a former time to initialize
+        Date beginTime = format.parse(beginTimeStr);
+        Date endTime = format.parse(endTimeStr);
         while ((line = reader.read()) != null) {
             List<String> newLine = new ArrayList<String>();
             for (int i = 0; i < line.size(); i ++) {
-                String newSingle = getSingle(typeArray.get(i), line.get(i), dateFormat);
-                if ((newSingle != null)&&(newSingle != "null")&&(newSingle != "NULL")) {
-                    int singleLength = newSingle.length();
-                    if (isContainChinese(newSingle)) {
-                        singleLength = singleLength * 2;
-                    }
-                    if (singleLength > everySize[i]) {
-                        everySize[i] = singleLength;
-                    }
-                    char a = newSingle.charAt(0);
-                    if (newSingle.charAt(0) == '\"') {
-                        newLine.add(newSingle.substring(1, newSingle.length()-1));
+                if (i != idIndex) {
+                    String newSingle = getSingle(typeArray.get(i), line.get(i), dateFormat);
+                    if ((!newSingle.equals(""))&&(newSingle != null)&&(!newSingle.equals("null"))&&(!newSingle.equals("NULL"))) {
+                        // find begin and end time
+                        if (typeArray.get(i).equals("DATETIME")) {
+                            Date thisTime = format.parse(newSingle);
+                            if (thisTime.getTime() < beginTime.getTime()) {
+                                beginTime = thisTime;
+                            }
+                            if (thisTime.getTime() > endTime.getTime()) {
+                                endTime = thisTime;
+                            }
+                        }
+                        int singleLength = newSingle.length();
+                        // set every cell's size, judge if contain chinese
+                        if (isContainChinese(newSingle)) {
+                            singleLength = singleLength * 2;
+                        }
+                        if (singleLength > everySize[i]) {
+                            everySize[i] = singleLength;
+                        }
+                        char a = newSingle.charAt(0);
+                        if (newSingle.charAt(0) == '\"') {
+                            newLine.add(newSingle.substring(1, newSingle.length()-1));
+                        } else {
+                            newLine.add(newSingle);
+                        }
                     } else {
-                        newLine.add(i, newSingle);
+                        newLine.add("");
                     }
-                } else {
-                    newLine.add(i, "");
                 }
+            }
+            if (isPos(nameArray)) {
+                List<Integer> posIndex = getPosIndex(nameArray);
+                List<Double> mercatorPos = LL2Mercator(line.get(posIndex.get(0)), line.get(posIndex.get(1)));
+                newLine.add(mercatorPos.get(0).toString());
+                newLine.add(mercatorPos.get(1).toString());
             }
             content.add(newLine.toArray(new String[] {}));
         }
-        result.put("everySize", everySize);
-//        result.put("header", header);
+//        int[] sizes = new int[everySize.length-1];
+        List<Integer> sizes = new ArrayList<Integer>();
+        for (int s = 0; s < everySize.length; s ++) {
+            sizes.add(everySize[s]);
+        }
+        if (isId(nameArray) != -1) {
+            int index = isId(nameArray);
+            nameArray.remove(index);
+            typeArray.remove(index);
+            sizes.remove(index);
+//            for (int i = 0; i < index; i ++) {
+//                sizes[i] = everySize[i];
+//            }
+//            for (int j = index + 1; j < everySize.length; j ++) {
+//                sizes[j-1] = everySize[j];
+//            }
+
+            if (isPos(nameArray)) {
+                nameArray.add("xMercator");
+                nameArray.add("yMercator");
+                typeArray.add("FLOAT");
+                typeArray.add("FLOAT");
+                sizes.add(0);
+                sizes.add(0);
+            }
+        }
+        result.put("sizes", sizes);
+        result.put("names", nameArray);
+        result.put("types", typeArray);
         result.put("content", content);
+        result.put("beginTime", beginTime);
+        result.put("endTime", endTime);
         return result;
     }
 
-    public static Map<String, Object> readTextData(JSONObject setting) throws IOException, JSONException {
+    public static Map<String, Object> readTextData(JSONObject setting) throws IOException, JSONException, ParseException {
         String path = setting.getString("FILEPATH");
         JSONArray fields = setting.getJSONArray("FIELDS");
-        List<String> fieldsArray = new ArrayList<String>(); // type的array
+        List<String> typeArray = new ArrayList<String>(); // type的array
         List<String> nameArray = new ArrayList<String>();
         for (int f = 0; f < fields.length(); f ++) {
-            fieldsArray.add(fields.getJSONObject(f).getString("TYPE"));
+            typeArray.add(fields.getJSONObject(f).getString("TYPE"));
             nameArray.add(fields.getJSONObject(f).getString("NAME"));
         }
         String dateFormat = setting.getString("DATE_FORMAT"); // date format
@@ -94,34 +148,80 @@ public class ReadLocalData {
         for (int j = 0; j < everySize.length; j ++) {
             everySize[j] = 0;
         }
+        int idIndex = isId(nameArray);
+        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String beginTimeStr = "2050-1-1 0:0:0"; // begin time, use a later time to initialize
+        String endTimeStr = "1900-1-1 0:0:0"; // end time, use a former time to initialize
+        Date beginTime = format.parse(beginTimeStr);
+        Date endTime = format.parse(endTimeStr);
         while (line != null){
             String[] single = line.split("\\\t");
-            String[] newLine = new String[single.length];
+//            String[] newLine = new String[single.length];
+            List<String> newLine = new ArrayList<String>();
             for (int i = 0; i < single.length; i ++) {
-                String newSingle = getSingle(fieldsArray.get(i), single[i], dateFormat);
-                if ((single[i] != "")&&(single[i] != "null")&&(single[i] != null)&&(single[i] != "NULL")) {
-                    int singleLength = single[i].length();
-                    if (isContainChinese(single[i])) {
-                        singleLength = singleLength * 2;
-                    }
-                    if (singleLength > everySize[i]) {
-                        everySize[i] = singleLength;
-                    }
-                    if((single[i].charAt(0) == '\"')&&(single[i].charAt(single[i].length()-1) == '\"')) {
-                        newLine[i] = single[i].substring(1, single[i].length()-1);
+                if (i != idIndex) {
+                    String newSingle = getSingle(typeArray.get(i), single[i], dateFormat);
+                    if ((!newSingle.equals(""))&&(!newSingle.equals("null"))&&(newSingle != null)&&(!newSingle.equals("NULL"))) {
+                        // find begin and end time
+                        if (typeArray.get(i).equals("DATETIME")) {
+                            Date thisTime = format.parse(newSingle);
+                            if (thisTime.getTime() < beginTime.getTime()) {
+                                beginTime = thisTime;
+                            }
+                            if (thisTime.getTime() > endTime.getTime()) {
+                                endTime = thisTime;
+                            }
+                        }
+                        int singleLength = newSingle.length();
+                        if (isContainChinese(newSingle)) {
+                            singleLength = singleLength * 2;
+                        }
+                        if (singleLength > everySize[i]) {
+                            everySize[i] = singleLength;
+                        }
+                        if((newSingle.charAt(0) == '\"')&&(newSingle.charAt(newSingle.length()-1) == '\"')) {
+                            newLine.add(newSingle.substring(1, newSingle.length()-1));
+                        } else {
+                            newLine.add(newSingle);
+                        }
                     } else {
-                        newLine[i] = single[i];
+                        newLine.add("");
                     }
-                } else {
-                    newLine[i] = "";
                 }
             }
-            content.add(newLine);
+            if (isPos(nameArray)) {
+                List<Integer> posIndex = getPosIndex(nameArray);
+                List<Double> mercatorPos = LL2Mercator(single[posIndex.get(0)], single[posIndex.get(1)]);
+                newLine.add(mercatorPos.get(0).toString());
+                newLine.add(mercatorPos.get(1).toString());
+            }
+            content.add(newLine.toArray(new String[] {}));
             line = reader.readLine();
         }
-        result.put("everySize", everySize);
-//        result.put("header", header);
+        List<Integer> sizes = new ArrayList<Integer>();
+        for (int s = 0; s < everySize.length; s ++) {
+            sizes.add(everySize[s]);
+        }
+        if (isId(nameArray) != -1) {
+            int index = isId(nameArray);
+            nameArray.remove(index);
+            typeArray.remove(index);
+            sizes.remove(index);
+            if (isPos(nameArray)) {
+                nameArray.add("xMercator");
+                nameArray.add("yMercator");
+                typeArray.add("FLOAT");
+                typeArray.add("FLOAT");
+                sizes.add(0);
+                sizes.add(0);
+            }
+        }
+        result.put("sizes", sizes);
+        result.put("names", nameArray);
+        result.put("types", typeArray);
         result.put("content", content);
+        result.put("beginTime", beginTime);
+        result.put("endTime", endTime);
         return result;
     }
 
@@ -136,7 +236,7 @@ public class ReadLocalData {
     }
 
     public static boolean isPos(List<String> nameList) {
-        if (nameList.equals("LON")&&nameList.equals("LAT")) {
+        if (nameList.contains("LON")&&nameList.contains("LAT")) {
             return true;
         } else {
             return false;
@@ -209,6 +309,7 @@ public class ReadLocalData {
         if (NumberUtils.isDigits(str)) {
             return str;
         } else {
+            System.out.println("整型数值" + str + "出错,已设置为空");
             return "";
         }
     }
@@ -217,6 +318,7 @@ public class ReadLocalData {
         if (NumberUtils.isNumber(str)) {
             return str;
         } else {
+            System.out.println("浮点数值" + str + ",已设置为空");
             return "";
         }
     }
@@ -229,14 +331,14 @@ public class ReadLocalData {
             Calendar calendar=Calendar.getInstance();
             calendar.setTime(date);
             int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
+            int month = calendar.get(Calendar.MONTH) + 1; // should plus 1, gregorian calendar begin with 0
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             int hour = calendar.get(Calendar.HOUR);
             int minute = calendar.get(Calendar.MINUTE);
             int second = calendar.get(Calendar.SECOND);
             thisTime = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
         } catch (ParseException e) {
-            System.out.println("时间" + dateStr + "出错，错误信息为:" + e.getMessage());
+            System.out.println("时间" + dateStr + "出错，错误信息为:" + e.getMessage() + ",已设置为空");
         }
         return thisTime;
     }

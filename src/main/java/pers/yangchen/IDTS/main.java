@@ -22,51 +22,88 @@ import java.util.*;
 public class main {
     public static void main(String[] args) {
 
-//        String settingPath = "/Users/yangchen/Desktop/example.txt";
-//        try {
-//            JSONArray settings = ReadSetting.getSettingContent(settingPath);
-//            for (int i = 0; i < settings.length(); i ++) {
-//                JSONObject setting = settings.getJSONObject(i);
-//                String filePath = setting.getString("FILEPATH");
-//                Map<String, Object> content = new HashMap<String, Object>();
-//                if (filePath != null) {
-//                    String[] filePathArray = filePath.split("\\.");
-//                    if (filePathArray[filePathArray.length - 1].equals("csv")) {
-//                        content = ReadLocalData.readCsvData(setting);
-//                    } else {
-//                        content = ReadLocalData.readTextData(setting);
-//                    }
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (JSONException e) {
-//            e.printStackTrace();
+        String settingPath = "/Users/yangchen/Desktop/exam.txt";
+        try {
+            JSONArray settings = ReadSetting.getSettingContent(settingPath);
+            for (int i = 0; i < settings.length(); i ++) {
+                JSONObject setting = settings.getJSONObject(i);
+                String filePath = setting.getString("FILEPATH");
+                Map<String, Object> content = new HashMap<String, Object>();
+                if (filePath != null) {
+                    String[] filePathArray = filePath.split("\\.");
+                    if (filePathArray[filePathArray.length - 1].equals("csv")) {
+                        content = ReadLocalData.readCsvData(setting);
+                        List<Integer> everySize = (List<Integer>) content.get("sizes");
+                        List<String> names = (List<String>) content.get("names");
+                        List<String> types = (List<String>) content.get("types");
+                        List<String[]> c = (List<String[]>) content.get("content");
+                        Date beginTime = (Date) content.get("beginTime");
+                        Date endTime = (Date) content.get("endTime");
+                        System.out.println(beginTime.toString());
+                        System.out.println(endTime.toString());
+                        for (int e = 0; e < everySize.size(); e ++) {
+                            System.out.println("every size: " + everySize.get(e));
+                        }
+                        for (int n = 0; n < names.size(); n ++) {
+                            System.out.println("name: " + names.get(n));
+                        }
+                        for (int t = 0; t < types.size(); t ++) {
+                            System.out.println("types: " + types.get(t));
+                        }
+                        for (int a = 0; a < c.size(); a ++) {
+                            String[] cs = c.get(a);
+                            for (int b = 0; b < cs.length; b ++) {
+                                System.out.println(cs[b]);
+                            }
+                        }
+                    } else {
+                        content = ReadLocalData.readTextData(setting);
+                        List<Integer> everySize = (List<Integer>) content.get("sizes");
+                        List<String> names = (List<String>) content.get("names");
+                        List<String> types = (List<String>) content.get("types");
+                        List<String[]> c = (List<String[]>) content.get("content");
+                        Date beginTime = (Date) content.get("beginTime");
+                        Date endTime = (Date) content.get("endTime");
+                        System.out.println(beginTime.toString());
+                        System.out.println(endTime.toString());
+                        for (int e = 0; e < everySize.size(); e ++) {
+                            System.out.println("every size: " + everySize.get(e));
+                        }
+                        for (int n = 0; n < names.size(); n ++) {
+                            System.out.println("name: " + names.get(n));
+                        }
+                        for (int t = 0; t < types.size(); t ++) {
+                            System.out.println("types: " + types.get(t));
+                        }
+                        for (int a = 0; a < c.size(); a ++) {
+                            String[] cs = c.get(a);
+                            for (int b = 0; b < cs.length; b ++) {
+                                System.out.println(cs[b]);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+//        int[] everySize = {1, 2, 3, 4};
+//        int index = 2;
+//        int[] sizes = new int[everySize.length-1];
+//        for (int i = 0; i < index; i ++) {
+//            sizes[i] = everySize[i];
+//        }
+//        for (int j = index + 1; j < everySize.length; j ++) {
+//            sizes[j-1] = everySize[j];
+//        }
+//        for (int k = 0; k < sizes.length; k ++) {
+//            System.out.println(sizes[k]);
 //        }
 
-//        String date_string = "04/30/16"; MM/dd/yy
-        String date_string = "1960/04/30";
-        SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd");
-        boolean dateflag = true;
-        String thisTime = "";
-        try
-        {
-            Date date = format.parse(date_string);
-            Calendar calendar=Calendar.getInstance();
-            calendar.setTime(date);
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int hour = calendar.get(Calendar.HOUR);
-            int minute = calendar.get(Calendar.MINUTE);
-            int second = calendar.get(Calendar.SECOND);
-            thisTime = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
-        } catch (ParseException e)
-        {
-            dateflag=false;
-        }finally{
-            //	成功：true ;失败:false
-            System.out.println(thisTime);
-        }
     }
 }

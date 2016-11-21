@@ -27,8 +27,8 @@ public class DatabaseRelated {
             conn.close();
             return databaseName;
         } else {
-            System.out.println("系统中存在以该名称命名的数据库，请更换命名");
-            return null;
+            System.out.println("系统中存在以该名称命名的数据库，将建立数据表");
+            return databaseName;
         }
     }
 
@@ -60,7 +60,7 @@ public class DatabaseRelated {
                 conn.close();
                 return tableName;
             } else {
-                System.out.println("数据表创建失败");
+                System.out.println("未知原因，数据表创建失败");
                 stmt.close();
                 conn.close();
                 return null;
