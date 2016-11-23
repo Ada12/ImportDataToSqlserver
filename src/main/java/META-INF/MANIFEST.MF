@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Class-Path: mysql-connector-java-5.1.6.jar log4j-1.2.15.jar metrics-co
+ re-2.2.0.jar jopt-simple-3.2.jar json-20090211.jar mail-1.4.jar kafka
+ _2.9.2-0.8.1.1.jar scala-library-2.9.2.jar slf4j-api-1.7.2.jar junit-
+ 3.8.1.jar jline-0.9.94.jar snappy-java-1.0.5.jar super-csv-2.4.0.jar 
+ zkclient-0.3.jar sqljdbc4-4.0.jar commons-lang-2.6.jar activation-1.1
+ .jar jms-1.1.jar zookeeper-3.3.4.jar
+Main-Class: pers.yangchen.IDTS.main
+

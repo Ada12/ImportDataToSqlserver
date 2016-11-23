@@ -51,42 +51,67 @@ public class ReadLocalData {
             List<String> newLine = new ArrayList<String>();
             for (int i = 0; i < line.size(); i ++) {
                 if (i != idIndex) {
-                    String newSingle = getSingle(typeArray.get(i), line.get(i), dateFormat);
-                    if ((!newSingle.equals(""))&&(newSingle != null)&&(!newSingle.equals("null"))&&(!newSingle.equals("NULL"))) {
-                        // find begin and end time
-                        if (typeArray.get(i).equals("DATETIME")) {
-                            Date thisTime = format.parse(newSingle);
-                            if (thisTime.getTime() < beginTime.getTime()) {
-                                beginTime = thisTime;
+                    try {
+                        String newSingle = getSingle(typeArray.get(i), line.get(i), dateFormat);
+                        if (newSingle != null) {
+                            if (newSingle.length() > 300) {
+                                newSingle = "";
                             }
-                            if (thisTime.getTime() > endTime.getTime()) {
-                                endTime = thisTime;
+                            if ((!newSingle.equals(""))&&(!newSingle.equals("null"))&&(!newSingle.equals("NULL"))) {
+                                // find begin and end time
+                                if (typeArray.get(i).equals("DATETIME")) {
+                                    Date thisTime = format.parse(newSingle);
+                                    if (thisTime.getTime() < beginTime.getTime()) {
+                                        beginTime = thisTime;
+                                    }
+                                    if (thisTime.getTime() > endTime.getTime()) {
+                                        endTime = thisTime;
+                                    }
+                                }
+                                int singleLength = newSingle.length();
+                                // set every cell's size, judge if contain chinese
+                                if (isContainChinese(newSingle)) {
+                                    singleLength = singleLength * 2;
+                                }
+                                if (singleLength > everySize[i]) {
+                                    everySize[i] = singleLength;
+                                }
+                                char a = newSingle.charAt(0);
+                                if (newSingle.charAt(0) == '\"') {
+                                    newLine.add(newSingle.substring(1, newSingle.length()-1));
+                                } else {
+                                    newLine.add(newSingle);
+                                }
+                            } else {
+                                newLine.add("");
                             }
-                        }
-                        int singleLength = newSingle.length();
-                        // set every cell's size, judge if contain chinese
-                        if (isContainChinese(newSingle)) {
-                            singleLength = singleLength * 2;
-                        }
-                        if (singleLength > everySize[i]) {
-                            everySize[i] = singleLength;
-                        }
-                        char a = newSingle.charAt(0);
-                        if (newSingle.charAt(0) == '\"') {
-                            newLine.add(newSingle.substring(1, newSingle.length()-1));
                         } else {
-                            newLine.add(newSingle);
+                            newLine.add("");
                         }
-                    } else {
-                        newLine.add("");
+                        if (isPos(nameArray)) {
+                            List<Integer> posIndex = getPosIndex(nameArray);
+                            List<Double> mercatorPos = LL2Mercator(line.get(posIndex.get(0)), line.get(posIndex.get(1)));
+                            try {
+                                newLine.add(mercatorPos.get(0).toString());
+                            } catch (NullPointerException e) {
+                                newLine.add("");
+                            }
+                            try {
+                                newLine.add(mercatorPos.get(1).toString());
+                            } catch (NullPointerException e) {
+                                newLine.add("");
+                            }
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        for (int t = 0; t < typeArray.size(); t ++) {
+                            newLine.add("");
+                        }
+                        if (isPos(nameArray)) {
+                            newLine.add("");
+                            newLine.add("");
+                        }
                     }
                 }
-            }
-            if (isPos(nameArray)) {
-                List<Integer> posIndex = getPosIndex(nameArray);
-                List<Double> mercatorPos = LL2Mercator(line.get(posIndex.get(0)), line.get(posIndex.get(1)));
-                newLine.add(mercatorPos.get(0).toString());
-                newLine.add(mercatorPos.get(1).toString());
             }
             content.add(newLine.toArray(new String[] {}));
         }
@@ -106,15 +131,14 @@ public class ReadLocalData {
 //            for (int j = index + 1; j < everySize.length; j ++) {
 //                sizes[j-1] = everySize[j];
 //            }
-
-            if (isPos(nameArray)) {
-                nameArray.add("xMercator");
-                nameArray.add("yMercator");
-                typeArray.add("FLOAT");
-                typeArray.add("FLOAT");
-                sizes.add(0);
-                sizes.add(0);
-            }
+        }
+        if (isPos(nameArray)) {
+            nameArray.add("xMercator");
+            nameArray.add("yMercator");
+            typeArray.add("FLOAT");
+            typeArray.add("FLOAT");
+            sizes.add(0);
+            sizes.add(0);
         }
         result.put("sizes", sizes);
         result.put("names", nameArray);
@@ -192,8 +216,16 @@ public class ReadLocalData {
             if (isPos(nameArray)) {
                 List<Integer> posIndex = getPosIndex(nameArray);
                 List<Double> mercatorPos = LL2Mercator(single[posIndex.get(0)], single[posIndex.get(1)]);
-                newLine.add(mercatorPos.get(0).toString());
-                newLine.add(mercatorPos.get(1).toString());
+                try {
+                    newLine.add(mercatorPos.get(0).toString());
+                } catch (NullPointerException e) {
+                    newLine.add("");
+                }
+                try {
+                    newLine.add(mercatorPos.get(1).toString());
+                } catch (NullPointerException e) {
+                    newLine.add("");
+                }
             }
             content.add(newLine.toArray(new String[] {}));
             line = reader.readLine();
@@ -207,14 +239,14 @@ public class ReadLocalData {
             nameArray.remove(index);
             typeArray.remove(index);
             sizes.remove(index);
-            if (isPos(nameArray)) {
-                nameArray.add("xMercator");
-                nameArray.add("yMercator");
-                typeArray.add("FLOAT");
-                typeArray.add("FLOAT");
-                sizes.add(0);
-                sizes.add(0);
-            }
+        }
+        if (isPos(nameArray)) {
+            nameArray.add("xMercator");
+            nameArray.add("yMercator");
+            typeArray.add("FLOAT");
+            typeArray.add("FLOAT");
+            sizes.add(0);
+            sizes.add(0);
         }
         result.put("sizes", sizes);
         result.put("names", nameArray);
@@ -258,24 +290,33 @@ public class ReadLocalData {
     }
 
     public static List<Double> LL2Mercator(String lon, String lat) {
-        try {
-            List<Double> mercatorPos = new ArrayList<Double>();
-            double lonD = Double.parseDouble(lon);
-            double latD = Double.parseDouble(lat);
-            if (latD > 85.05112) {
-                latD = 85.05112;
-            } else if (latD < -85.05112) {
-                latD = -85.05112;
+        if ((lon != null)&&(lat != null)) {
+            try {
+                lon = lon.trim();
+                lat = lat.trim();
+                List<Double> mercatorPos = new ArrayList<Double>();
+                double lonD = Double.parseDouble(lon);
+                double latD = Double.parseDouble(lat);
+                if (latD > 85.05112) {
+                    latD = 85.05112;
+                } else if (latD < -85.05112) {
+                    latD = -85.05112;
+                }
+                // x为经度，longitude
+                double x = lonD * 20037508.34 / 180;
+                // y为纬度，latitude
+                double y = Math.log(Math.tan((90 + latD) * Math.PI / 360)) / (Math.PI / 180);
+                y = y * 20037508.34 / 180;
+                mercatorPos.add(0, x);
+                mercatorPos.add(1, y);
+                return mercatorPos;
+            } catch (NumberFormatException e) {
+                List<Double> errorPos = new ArrayList<Double>();
+                errorPos.add(0, null);
+                errorPos.add(0, null);
+                return errorPos;
             }
-            // x为经度，longitude
-            double x = lonD * 20037508.34 / 180;
-            // y为纬度，latitude
-            double y = Math.log(Math.tan((90 + latD) * Math.PI / 360)) / (Math.PI / 180);
-            y = y * 20037508.34 / 180;
-            mercatorPos.add(0, x);
-            mercatorPos.add(1, y);
-            return mercatorPos;
-        } catch (NumberFormatException e) {
+        } else {
             List<Double> errorPos = new ArrayList<Double>();
             errorPos.add(0, null);
             errorPos.add(0, null);
@@ -306,40 +347,61 @@ public class ReadLocalData {
     }
 
     public static String toInt(String str) {
-        if (NumberUtils.isDigits(str)) {
-            return str;
+        if (str != null) {
+            str = str.trim();
+            if (!str.contains(".")) {
+                if (NumberUtils.isNumber(str)) {
+                    return str;
+                } else {
+                    System.out.println("整型数值 " + str + " 出错,已设置为空");
+                    return "";
+                }
+            } else {
+                System.out.println("整型数值 " + str + " 出错,已设置为空");
+                return "";
+            }
         } else {
-            System.out.println("整型数值" + str + "出错,已设置为空");
             return "";
         }
     }
 
     public static String toFloat(String str) {
-        if (NumberUtils.isNumber(str)) {
-            return str;
+        if (str != null) {
+            str = str.trim();
+            if (NumberUtils.isNumber(str)) {
+                return str;
+            } else {
+                System.out.println(" 浮点数值" + str + " 出错,已设置为空");
+                return "";
+            }
         } else {
-            System.out.println("浮点数值" + str + ",已设置为空");
             return "";
         }
     }
 
     public static String toDateTime(String formatStr, String dateStr) {
-        SimpleDateFormat format=new SimpleDateFormat(formatStr);
-        String thisTime = "";
-        try {
-            Date date = format.parse(dateStr);
-            Calendar calendar=Calendar.getInstance();
-            calendar.setTime(date);
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH) + 1; // should plus 1, gregorian calendar begin with 0
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int hour = calendar.get(Calendar.HOUR);
-            int minute = calendar.get(Calendar.MINUTE);
-            int second = calendar.get(Calendar.SECOND);
-            thisTime = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
-        } catch (ParseException e) {
-            System.out.println("时间" + dateStr + "出错，错误信息为:" + e.getMessage() + ",已设置为空");
+        if ((formatStr != null)&&(dateStr != null)) {
+            dateStr = dateStr.trim();
+            formatStr = formatStr.trim();
+            SimpleDateFormat format=new SimpleDateFormat(formatStr);
+            String thisTime = "";
+            try {
+                Date date = format.parse(dateStr);
+                Calendar calendar=Calendar.getInstance();
+                calendar.setTime(date);
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH) + 1; // should plus 1, gregorian calendar begin with 0
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                int hour = calendar.get(Calendar.HOUR);
+                int minute = calendar.get(Calendar.MINUTE);
+                int second = calendar.get(Calendar.SECOND);
+                thisTime = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+            } catch (ParseException e) {
+                System.out.println("时间 " + dateStr + " 出错，错误信息为:" + e.getMessage() + ",已设置为空");
+            }
+            return thisTime;
+        } else {
+            return "";
         }
-        return thisTime;
     }
 }

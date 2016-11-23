@@ -1,6 +1,8 @@
 package pers.yangchen.IDTS;
 
 import com.sun.tools.jdi.LinkedHashMap;
+import javafx.scene.chart.PieChart;
+import org.apache.commons.lang.math.NumberUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +24,8 @@ import java.util.*;
 public class main {
     public static void main(String[] args) {
 
-        String settingPath = "/Users/yangchen/Desktop/exam.txt";
+        String settingPath = args[0];
+//        String settingPath = "/Users/yangchen/Desktop/exam.txt";
         try {
             JSONArray settings = ReadSetting.getSettingContent(settingPath);
             for (int i = 0; i < settings.length(); i ++) {
@@ -33,54 +36,26 @@ public class main {
                     String[] filePathArray = filePath.split("\\.");
                     if (filePathArray[filePathArray.length - 1].equals("csv")) {
                         content = ReadLocalData.readCsvData(setting);
-                        List<Integer> everySize = (List<Integer>) content.get("sizes");
-                        List<String> names = (List<String>) content.get("names");
-                        List<String> types = (List<String>) content.get("types");
-                        List<String[]> c = (List<String[]>) content.get("content");
-                        Date beginTime = (Date) content.get("beginTime");
-                        Date endTime = (Date) content.get("endTime");
-                        System.out.println(beginTime.toString());
-                        System.out.println(endTime.toString());
-                        for (int e = 0; e < everySize.size(); e ++) {
-                            System.out.println("every size: " + everySize.get(e));
-                        }
-                        for (int n = 0; n < names.size(); n ++) {
-                            System.out.println("name: " + names.get(n));
-                        }
-                        for (int t = 0; t < types.size(); t ++) {
-                            System.out.println("types: " + types.get(t));
-                        }
-                        for (int a = 0; a < c.size(); a ++) {
-                            String[] cs = c.get(a);
-                            for (int b = 0; b < cs.length; b ++) {
-                                System.out.println(cs[b]);
+                        String database = setting.getString("DATABASE");
+                        String databaseName = DatabaseRelated.createDatabase(database);
+                        if (databaseName != null) {
+                            String tableName = DatabaseRelated.createTables(databaseName, setting, content);
+                            if (tableName != null) {
+                                DatabaseRelated.importData(databaseName, tableName, content);
                             }
                         }
+                        DatabaseRelated.saveToFixedDataSurvey(setting, content);
                     } else {
                         content = ReadLocalData.readTextData(setting);
-                        List<Integer> everySize = (List<Integer>) content.get("sizes");
-                        List<String> names = (List<String>) content.get("names");
-                        List<String> types = (List<String>) content.get("types");
-                        List<String[]> c = (List<String[]>) content.get("content");
-                        Date beginTime = (Date) content.get("beginTime");
-                        Date endTime = (Date) content.get("endTime");
-                        System.out.println(beginTime.toString());
-                        System.out.println(endTime.toString());
-                        for (int e = 0; e < everySize.size(); e ++) {
-                            System.out.println("every size: " + everySize.get(e));
-                        }
-                        for (int n = 0; n < names.size(); n ++) {
-                            System.out.println("name: " + names.get(n));
-                        }
-                        for (int t = 0; t < types.size(); t ++) {
-                            System.out.println("types: " + types.get(t));
-                        }
-                        for (int a = 0; a < c.size(); a ++) {
-                            String[] cs = c.get(a);
-                            for (int b = 0; b < cs.length; b ++) {
-                                System.out.println(cs[b]);
+                        String database = setting.getString("DATABASE");
+                        String databaseName = DatabaseRelated.createDatabase(database);
+                        if (databaseName != null) {
+                            String tableName = DatabaseRelated.createTables(databaseName, setting, content);
+                            if (tableName != null) {
+                                DatabaseRelated.importData(databaseName, tableName, content);
                             }
                         }
+                        DatabaseRelated.saveToFixedDataSurvey(setting, content);
                     }
                 }
             }
@@ -89,6 +64,14 @@ public class main {
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 

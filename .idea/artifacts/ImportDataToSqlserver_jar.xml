@@ -1,0 +1,19 @@
+<component name="ArtifactManager">
+  <artifact name="ImportDataToSqlserver:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ImportDataToSqlserver_jar</output-path>
+    <root id="root">
+      <element id="archive" name="ImportDataToSqlserver.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="ImportDataToSqlserver" />
+      </element>
+      <element id="directory" name="lib">
+        <element id="library" level="project" name="Maven: commons-lang:commons-lang:2.6" />
+        <element id="library" level="project" name="Maven: org.json:json:20090211" />
+        <element id="library" level="project" name="Maven: com.microsoft.sqlserver:sqljdbc4:4.0" />
+        <element id="library" level="project" name="Maven: net.sf.supercsv:super-csv:2.4.0" />
+      </element>
+    </root>
+  </artifact>
+</component>
