@@ -40,4 +40,4 @@ data1	data2	data3	data4
 	}
 ］
 ```
-其中，DESCRIBE可以是中文，除了DESCRIBE都必须要求是英文或其与数字的组合，FILEPATH必须为真实有效的。在FIELDS中，名称为ID的字段为保留字，若为该字段，则该列的数据将被掉。同时，数据类型为DATETIME的日期类型，要求为标准的日期类型，为YYYY/MM/DD hh:mm:ss或者YYYY-MM-DD hh:mm:ss或者不带时间的日期。若所在列的内容与数据类型不符合，则被设置为空值。
+其中，DESCRIBE可以是中文，除了DESCRIBE都必须要求是英文或其与数字的组合，FILEPATH必须为真实有效的。在FIELDS中，名称为ID的字段为保留字，若为该字段，则该列的数据将被掉。同时，数据类型为DATETIME的日期类型，要求为标准的DATE_FORMAT中要求的日期类型，即y代表年，M代表年中的月份，d代表月中的q日期，h代表天中的消失，m代表小时中的分钟，s代表分钟中的秒，S代表毫秒。例如，DATE_FORMAT为yyyy/MM/dd hh:mm:ssy可以格式化2016/08/19 11:28:22的时间。若所在列的内容与DATE_FORMAT类型不符合，则被设置为空值。
