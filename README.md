@@ -28,6 +28,7 @@ data1	data2	data3	data4
 		"TABLE":"AQI",
 		"FILEPATH":"\2015data\空气质量状况\环保aqi(1407-1504)\aqi数据.csv",
 		"DESCRIBE":"该数据是定量描述空气质量状况的无量纲指数",
+		"DATE_FORMAT":"yyyy-MM-dd hh:mm:ss",
 		"FIELDS":[
 					{"NAME":"TIME","TYPE":"DATETIME"},
 					{"NAME":"SITEID","TYPE":"INT"},
